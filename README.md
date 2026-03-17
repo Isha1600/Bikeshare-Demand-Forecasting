@@ -1,6 +1,6 @@
 # 🚲 Bikeshare Demand Forecasting using Time Series Models in R
 
-📄 **Project Report:** [bikeshare_forecasting.html](bikeshare_forecasting.html)  
+📄 **Project Report:** [bikeshare_forecasting.html](https://github.com/Isha1600/Bikeshare-Demand-Forecasting/blob/main/Forecast-daily-bike-rental-demand-using-time-series-models.html)  
 📑 **Source File:** [bikeshare_forecasting.Rmd](https://github.com/Isha1600/Bikeshare-Demand-Forecasting/blob/main/Forecast-daily-bike-rental-demand-using-time-series-models.Rmd)
 
 ---
