@@ -1,0 +1,281 @@
+---
+title: "Forecast daily bike rental demand using time series models"
+date: "`r Sys.Date()`"
+output: html_document
+author: "Isha Gupta"
+---
+
+# About Data Analysis Report
+
+This RMarkdown file contains the report of the data analysis done for the project on forecasting daily bike rental demand using time series models in R. It includes data exploration, summary statistics, time series visualization, smoothing techniques, decomposition, stationarity testing, and forecasting using ARIMA models.
+
+The final report was completed on `r date()`.
+
+**Data Description:**
+
+This dataset contains the daily count of rental bike transactions between 2011 and 2012 in the Capital Bikeshare system along with weather and seasonal information.
+
+**Data Source:**  
+https://archive.ics.uci.edu/ml/datasets/bike+sharing+dataset
+
+**Relevant Paper:**  
+Fanaee-T, Hadi, and Gama, Joao. Event labeling combining ensemble detectors and background knowledge, Progress in Artificial Intelligence (2013).
+
+---
+
+# Task One: Load and Explore the Data
+
+
+## Load data and install packages
+
+```{r}
+library(timetk)
+library(tidyverse)
+library(lubridate)
+library(forecast)
+library(tseries)
+library(TTR)
+```
+
+## Load Dataset
+
+```{r}
+data("bike_sharing_daily")
+bike_data <- bike_sharing_daily
+head(bike_data)
+summary(bike_data)
+
+```
+
+```{r}
+
+names(bike_data) 
+
+```
+
+```{r}
+
+data("bike_sharing_daily")
+
+bike_data <- bike_sharing_daily
+
+head(bike_data)
+
+summary(bike_data)
+
+str(bike_data)
+
+cor(bike_data$temp, bike_data$cnt)
+
+cor(bike_data$atemp, bike_data$cnt)
+```
+```{r}
+boxplot(temp ~ season,
+        data = bike_data,
+        col="lightblue",
+        main="Temperature Distribution Across Seasons",
+        xlab="Season",
+        ylab="Temperature")
+
+```
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+data("bike_sharing_daily")
+bike_data <- bike_sharing_daily
+```
+```{r}
+bike_data %>%
+  mutate(month = lubridate::month(dteday, label = TRUE)) %>%
+  group_by(month) %>%
+  summarise(
+    mean_temp = mean(temp),
+    mean_humidity = mean(hum),
+    mean_windspeed = mean(windspeed),
+    mean_rentals = mean(cnt)
+  )
+```
+#Task two: Create Interactive Time Seies Plot
+
+```{r}
+bike_data %>%
+  plot_time_series(
+    dteday,
+    cnt,
+    .interactive = TRUE,
+    .plotly_slider = TRUE,
+    .title = "Daily Bike Rental Demand Over Time"
+  )
+```
+
+```{r}
+bike_data %>%
+  plot_seasonal_diagnostics(
+    dteday,
+    cnt
+  )
+```
+
+```{r}
+bike_data %>%
+  plot_anomaly_diagnostics(
+    dteday,
+    cnt
+  )
+```
+
+#Task Three: Smooth Time Series Data
+
+```{r}
+ts_data <- ts(bike_data$cnt,
+              frequency = 365,
+              start = c(2011,1))
+
+plot(ts_data,
+     main="Daily Bike Rental Time Series",
+     ylab="Rentals",
+     xlab="Time")
+```
+```{r}
+clean_ts <- tsclean(ts_data)
+
+plot(clean_ts,
+     main="Cleaned Time Series")
+```
+
+```{r}
+ses_model <- HoltWinters(clean_ts, beta = FALSE, gamma = FALSE)
+
+plot(ses_model)
+```
+
+```{r}
+ma10 <- SMA(clean_ts, n=10)
+
+plot(ma10,
+     main="10 Day Moving Average")
+```
+
+#Task Four...
+
+```{r}
+decomp <- decompose(clean_ts)
+
+plot(decomp)
+```
+
+```{r}
+adf.test(clean_ts)
+```
+
+```{r}
+diff_ts <- diff(clean_ts)
+
+plot(diff_ts,
+     main="Differenced Time Series")
+```
+
+```{r}
+acf(diff_ts)
+
+pacf(diff_ts)
+```
+
+#Task Five...
+
+```{r}
+clean_ts
+```
+```{r}
+auto_model <- auto.arima(clean_ts, seasonal = FALSE)
+
+summary(auto_model)
+```
+```{r}
+manual_model <- arima(clean_ts, order=c(2,1,2))
+
+summary(manual_model)
+```
+```{r}
+checkresiduals(auto_model)
+```
+
+
+
+```{r}
+shapiro.test(residuals(auto_model))
+```
+```{r}
+forecast_auto <- forecast(auto_model, h=25)
+
+plot(forecast_auto,
+     main="Forecasted Bike Rental Demand")
+```
+
+
+# Task Six: Findings and Conclusions
+
+## Key Insights
+
+- Bike rental demand shows strong seasonal behavior throughout the year.
+
+- Temperature has a positive relationship with bike rental demand. Higher temperatures tend to increase bike usage.
+
+- Rental demand is highest during warmer seasons such as summer, while demand decreases during colder months.
+
+- Registered users contribute significantly more rentals compared to casual users, indicating consistent usage by regular commuters.
+
+---
+
+## Forecast Insights
+
+The ARIMA model successfully captured the underlying trend and seasonal patterns in the bike rental dataset. The forecast results suggest that bike rental demand will continue to follow seasonal trends with fluctuations influenced by weather conditions and seasonal changes.
+
+---
+
+## Business Recommendations
+
+Based on the results of this analysis, the bike rental company can consider the following strategies:
+
+- Increase bike availability during warmer months when rental demand is high.
+
+- Reduce the number of bikes available during colder seasons to optimize operational costs.
+
+- Use demand forecasting to implement dynamic pricing strategies during peak demand periods.
+
+- Expand bike stations in high demand areas to improve service availability and customer satisfaction.
+
+---
+
+## Limitations
+
+- The dataset only contains two years of data, which may limit the long-term forecasting accuracy.
+
+- External factors such as holidays, special events, and economic conditions were not included in this analysis.
+
+- Weather prediction uncertainty may affect the accuracy of future demand forecasts.
+
+---
+
+## Future Work
+
+Future improvements to this analysis could include:
+
+- Incorporating additional weather variables such as precipitation and visibility.
+
+- Applying machine learning forecasting models such as Random Forest or Gradient Boosting.
+
+- Analyzing hourly bike rental demand to obtain more detailed insights into user behavior.
+
+---
+
+## Conclusion
+
+Time series analysis provides valuable insights into bike rental demand patterns. By applying ARIMA forecasting models, bike rental companies can improve operational planning, optimize fleet allocation, and enhance pricing strategies. These insights can help businesses better manage resources and improve customer service.
+
+
+
+
